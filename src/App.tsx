@@ -7,6 +7,8 @@ import NavBar from "./components/NavBar";
 import Cart from "./components/Cart";
 import ExpandableItem from "./components/ExpandableItem";
 import Form from "./components/Form";
+import ExpenseList from "./expense-tracker/components/ExpenseList";
+import ExpenseFilter from "./expense-tracker/components/ExpenseFilter";
 
 // function App() {
 //   let items = ["New York", "San Francisco", "Tokyo", "London", "Paris"];
@@ -161,8 +163,35 @@ import Form from "./components/Form";
 //     </ExpandableItem>
 //   );
 // };
+// const App = () => {
+//   return <Form></Form>;
+// };
+
 const App = () => {
-  return <Form></Form>;
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [expenses, setExpenses] = useState([
+    { id: 1, description: "Item 1", amount: 10, category: "Groceries" },
+    { id: 2, description: "Item 2", amount: 14, category: "Groceries" },
+    { id: 3, description: "Item 3", amount: 20, category: "Entertainment" },
+  ]);
+
+  const visibleExpenses = selectedCategory
+    ? expenses.filter((e) => e.category === selectedCategory)
+    : expenses;
+
+  return (
+    <>
+      <div className="mb-3">
+        <ExpenseFilter
+          onSelectCategory={(category) => setSelectedCategory(category)}
+        />
+      </div>
+      <ExpenseList
+        expenses={visibleExpenses}
+        onDelete={(id) => setExpenses(expenses.filter((e) => e.id != id))}
+      />
+    </>
+  );
 };
 
 export default App;
