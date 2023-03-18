@@ -1,6 +1,6 @@
 // import ListGroup from "./components/ListGroup";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Like from "./components/Like";
 import produce from "immer";
 import NavBar from "./components/NavBar";
@@ -9,6 +9,9 @@ import ExpandableItem from "./components/ExpandableItem";
 import Form from "./components/Form";
 import ExpenseList from "./expense-tracker/components/ExpenseList";
 import ExpenseFilter from "./expense-tracker/components/ExpenseFilter";
+import ExpenseForm from "./expense-tracker/components/ExpenseForm";
+import ProductList from "./components/ProductList";
+import axios, { AxiosError, CanceledError } from "axios";
 
 // function App() {
 //   let items = ["New York", "San Francisco", "Tokyo", "London", "Paris"];
@@ -167,29 +170,234 @@ import ExpenseFilter from "./expense-tracker/components/ExpenseFilter";
 //   return <Form></Form>;
 // };
 
+// Expense tracker
+// const App = () => {
+//   const [selectedCategory, setSelectedCategory] = useState("");
+//   const [expenses, setExpenses] = useState([
+//     { id: 1, description: "Item 1", amount: 10, category: "Groceries" },
+//     { id: 2, description: "Item 2", amount: 14, category: "Groceries" },
+//     { id: 3, description: "Item 3", amount: 20, category: "Entertainment" },
+//   ]);
+
+//   const visibleExpenses = selectedCategory
+//     ? expenses.filter((e) => e.category === selectedCategory)
+//     : expenses;
+
+//   return (
+//     <>
+//       <div className="mb-5">
+//         <ExpenseForm
+//           onSubmit={(expense) =>
+//             setExpenses([...expenses, { ...expense, id: expenses.length + 1 }])
+//           }
+//         />
+//       </div>
+//       <div className="mb-3">
+//         <ExpenseFilter
+//           onSelectCategory={(category) => setSelectedCategory(category)}
+//         />
+//       </div>
+//       <ExpenseList
+//         expenses={visibleExpenses}
+//         onDelete={(id) => setExpenses(expenses.filter((e) => e.id != id))}
+//       />
+//     </>
+//   );
+// };
+
+// const App = () => {
+//   const [category, setCategory] = useState("");
+//   return (
+//     <div>
+//       <select
+//         className="form-select"
+//         onChange={(e) => setCategory(e.target.value)}
+//       >
+//         <option value=""></option>
+//         <option value="Clothing">Clothing</option>
+//         <option value="Household">Household</option>
+//       </select>
+//       <ProductList category={category} />
+//     </div>
+//   );
+// };
+
+// Cleanup
+// const connect = () => console.log("Connecting");
+// const disconnect = () => console.log("disconnecting");
+
+// const App = () => {
+//   useEffect(() => {
+//     connect();
+//     return () => {
+//       disconnect();
+//     };
+//   });
+// };
+
+interface User {
+  id: number;
+  name: string;
+}
+
+// const App = () => {
+//   const [users, setUsers] = useState<User[]>([]);
+//   const [error, setError] = useState("");
+//   useEffect(() => {
+//     const fetchUsers = async () => {
+//       try {
+//         const res = await axios.get<User[]>(
+//           "https://jsonplaceholder.typicode.com/xusers"
+//         );
+//         setUsers(res.data);
+//       } catch (err) {
+//         setError((err as AxiosError).message);
+//       }
+//     };
+//     fetchUsers();
+//   }, []);
+//   return (
+//     <>
+//       <p className="text-danger">{error}</p>
+//       <ul>
+//         {users.map((user) => (
+//           <li key={user.id}>{user.name}</li>
+//         ))}
+//       </ul>
+//     </>
+//   );
+// };
+
+// cancelling request
+// const App = () => {
+//   const [users, setUsers] = useState<User[]>([]);
+//   const [error, setError] = useState("");
+//   const [isLoading, setLoading] = useState(false);
+
+//   useEffect(() => {
+//     const controller = new AbortController();
+//     setLoading(true);
+//     axios
+//       .get<User[]>("https://jsonplaceholder.typicode.com/users", {
+//         signal: controller.signal,
+//       })
+//       .then((res) => {
+//         setUsers(res.data);
+//         setLoading(false);
+//       })
+//       .catch((err) => {
+//         if (err instanceof CanceledError) return;
+//         setError(err.message);
+//         setLoading(false);
+//       });
+
+//     return () => {
+//       controller.abort();
+//     };
+//   }, []);
+//   return (
+//     <>
+//       <p className="text-danger">{error}</p>
+//       {isLoading && <div className="spinner-border"></div>}
+//       <ul>
+//         {users.map((user) => (
+//           <li key={user.id}>{user.name}</li>
+//         ))}
+//       </ul>
+//     </>
+//   );
+// };
+
+// loaders
 const App = () => {
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [expenses, setExpenses] = useState([
-    { id: 1, description: "Item 1", amount: 10, category: "Groceries" },
-    { id: 2, description: "Item 2", amount: 14, category: "Groceries" },
-    { id: 3, description: "Item 3", amount: 20, category: "Entertainment" },
-  ]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [error, setError] = useState("");
+  const [isLoading, setLoading] = useState(false);
 
-  const visibleExpenses = selectedCategory
-    ? expenses.filter((e) => e.category === selectedCategory)
-    : expenses;
+  useEffect(() => {
+    setLoading(true);
+    axios
+      .get<User[]>("https://jsonplaceholder.typicode.com/users")
+      .then((res) => {
+        setUsers(res.data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        if (err instanceof CanceledError) return;
+        setError(err.message);
+        setLoading(false);
+      });
+  }, []);
 
+  const deleteUser = (user: User) => {
+    const originalUsers = [...users];
+    setUsers(users.filter((u) => u.id !== user.id));
+    axios
+      .delete("https://jsonplaceholder.typicode.com/xusers/" + user.id)
+      .catch((err) => {
+        setError(err.message);
+        setUsers(originalUsers);
+      });
+  };
+
+  const addUser = () => {
+    const originalUsers = [...users];
+    const newUser = { id: 0, name: "Kishor" };
+    setUsers([newUser, ...users]);
+    axios
+      .post("https://jsonplaceholder.typicode.com/users", newUser)
+      .then(({ data: savedUser }) => setUsers([savedUser, ...users]))
+      .catch((err) => {
+        setError(err.message);
+        setUsers(originalUsers);
+      });
+  };
+
+  const updateUser = (user: User) => {
+    const originalUsers = [...users];
+    const updatedUser = { ...user, name: user.name + "!" };
+    setUsers(users.map((u) => (u.id === user.id ? updatedUser : u)));
+    axios
+      .patch(
+        "https://jsonplaceholder.typicode.com/users/" + user.id,
+        updatedUser
+      )
+      .catch((err) => {
+        setError(err.message);
+        setUsers(originalUsers);
+      });
+  };
   return (
     <>
-      <div className="mb-3">
-        <ExpenseFilter
-          onSelectCategory={(category) => setSelectedCategory(category)}
-        />
-      </div>
-      <ExpenseList
-        expenses={visibleExpenses}
-        onDelete={(id) => setExpenses(expenses.filter((e) => e.id != id))}
-      />
+      <p className="text-danger">{error}</p>
+      {isLoading && <div className="spinner-border"></div>}
+      <button className="btn btn-primary mb-3" onClick={addUser}>
+        Add User
+      </button>
+      <ul className="list-group">
+        {users.map((user) => (
+          <li
+            className="list-group-item d-flex justify-content-between"
+            key={user.id}
+          >
+            {user.name}{" "}
+            <div>
+              <button
+                className="btn btn-outline-secondary mx-1"
+                onClick={() => updateUser(user)}
+              >
+                Update
+              </button>
+              <button
+                className="btn btn-outline-danger"
+                onClick={() => deleteUser(user)}
+              >
+                Delete
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
     </>
   );
 };
